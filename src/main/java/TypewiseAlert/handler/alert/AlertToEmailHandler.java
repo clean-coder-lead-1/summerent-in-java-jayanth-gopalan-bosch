@@ -32,13 +32,22 @@ public class AlertToEmailHandler implements IAlertHandler {
     }
 
     private void sendToEmail(final BreachType breachType) {
-        if ((null != breachType) && (null != mBreachTypeEmailHandlerMap)
-                && (mBreachTypeEmailHandlerMap.containsKey(breachType))) {
-            IBreachTypeEmailHandler handler = mBreachTypeEmailHandlerMap.get(breachType);
-            if (null != handler) {
-                handler.onHandle();
-            }
+        IBreachTypeEmailHandler handler = getHandler(breachType);
+        if (null != handler) {
+            handler.onHandle();
+        } else {
+            System.err.println("Failed to send email alert");
         }
+    }
+
+    private IBreachTypeEmailHandler getHandler(final BreachType breachType) {
+        IBreachTypeEmailHandler handler = null;
+        if ((null != breachType) && (null != mBreachTypeEmailHandlerMap)) {
+            handler = mBreachTypeEmailHandlerMap.get(breachType);
+        } else {
+            System.err.println("Failed to get BreachTypeEmailHandler for sending email alert");
+        }
+        return handler;
     }
 
 }
