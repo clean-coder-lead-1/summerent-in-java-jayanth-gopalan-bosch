@@ -1,6 +1,6 @@
 package TypewiseAlert;
 
-import android.util.Pair;
+import javafx.util.Pair;
 
 public class TypewiseAlert {
     public enum BreachType {
