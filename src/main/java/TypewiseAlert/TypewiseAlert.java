@@ -10,12 +10,12 @@ import TypewiseAlert.types.AlertTarget;
 import TypewiseAlert.types.BreachType;
 import TypewiseAlert.types.CoolingType;
 
-public class TypeWiseAlert {
+public class TypewiseAlert {
 
     private Map<CoolingType, TemperatureLimit> mTemperatureLimitsMap;
     private Map<AlertTarget, IAlertHandler> mAlertHandlerMap;
 
-    public TypeWiseAlert() {
+    public TypewiseAlert() {
         initTemperatureLimitsMap();
         initAlertHandlerMap();
     }
