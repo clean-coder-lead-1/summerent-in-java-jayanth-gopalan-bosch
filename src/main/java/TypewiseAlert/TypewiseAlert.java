@@ -1,7 +1,5 @@
 package TypewiseAlert;
 
-import javafx.util.Pair;
-
 public class TypewiseAlert {
     public enum BreachType {
         NORMAL,
@@ -25,6 +23,24 @@ public class TypewiseAlert {
         public String mBrand;
     }
 
+    private static class TemperatureLimit {
+        private double mLowerLimit = 0;
+        private double mUpperLimit = 0;
+
+        TemperatureLimit(final double lowerLimit, final double upperLimit) {
+            mLowerLimit = lowerLimit;
+            mUpperLimit = upperLimit;
+        }
+
+        double getLowerLimit() {
+            return mLowerLimit;
+        }
+
+        double getUpperLimit() {
+            return mUpperLimit;
+        }
+    }
+
     public static BreachType inferBreach(final double value, final double lowerLimit,
                                          final double upperLimit) {
         BreachType breachType;
@@ -41,24 +57,25 @@ public class TypewiseAlert {
     public static BreachType classifyTemperatureBreach(final CoolingType coolingType,
                                                        final double temperatureInC) {
         BreachType breachType = BreachType.NORMAL;
-        Pair<Integer, Integer> minMaxLimit = getMinMaxLimit(coolingType);
+        TemperatureLimit minMaxLimit = getMinMaxLimit(coolingType);
         if (null != minMaxLimit) {
-            breachType = inferBreach(temperatureInC, minMaxLimit.first, minMaxLimit.second);
+            breachType = inferBreach(temperatureInC, minMaxLimit.getLowerLimit(),
+                    minMaxLimit.getUpperLimit());
         }
         return breachType;
     }
 
-    private static Pair<Integer, Integer> getMinMaxLimit(final CoolingType coolingType) {
-        Pair<Integer, Integer> minMaxLimit = null;
+    private static TemperatureLimit getMinMaxLimit(final CoolingType coolingType) {
+        TemperatureLimit minMaxLimit = null;
         switch (coolingType) {
             case PASSIVE_COOLING:
-                minMaxLimit = new Pair<>(0, 35);
+                minMaxLimit = new TemperatureLimit(0, 35);
                 break;
             case HI_ACTIVE_COOLING:
-                minMaxLimit = new Pair<>(0, 45);
+                minMaxLimit = new TemperatureLimit(0, 45);
                 break;
             case MED_ACTIVE_COOLING:
-                minMaxLimit = new Pair<>(0, 40);
+                minMaxLimit = new TemperatureLimit(0, 40);
                 break;
         }
         return minMaxLimit;
