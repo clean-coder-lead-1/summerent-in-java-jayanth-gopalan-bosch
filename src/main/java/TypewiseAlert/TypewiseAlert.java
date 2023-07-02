@@ -1,26 +1,88 @@
 package TypewiseAlert;
 
-public class TypewiseAlert {
-    public enum BreachType {
-        NORMAL,
-        TOO_LOW,
-        TOO_HIGH
+import java.util.HashMap;
+import java.util.Map;
+
+import TypewiseAlert.handler.alert.AlertToControllerHandler;
+import TypewiseAlert.handler.alert.AlertToEmailHandler;
+import TypewiseAlert.handler.alert.IAlertHandler;
+import TypewiseAlert.types.AlertTarget;
+import TypewiseAlert.types.BreachType;
+import TypewiseAlert.types.CoolingType;
+
+public class TypeWiseAlert {
+
+    private Map<CoolingType, TemperatureLimit> mTemperatureLimitsMap;
+    private Map<AlertTarget, IAlertHandler> mAlertHandlerMap;
+
+    public TypeWiseAlert() {
+        initTemperatureLimitsMap();
+        initAlertHandlerMap();
     }
 
-    public enum CoolingType {
-        PASSIVE_COOLING,
-        HI_ACTIVE_COOLING,
-        MED_ACTIVE_COOLING
+    private void initTemperatureLimitsMap() {
+        if (null == mTemperatureLimitsMap) {
+            mTemperatureLimitsMap = new HashMap<>();
+        }
+        mTemperatureLimitsMap.put(CoolingType.PASSIVE_COOLING, new TemperatureLimit(0, 35));
+        mTemperatureLimitsMap.put(CoolingType.HI_ACTIVE_COOLING, new TemperatureLimit(0, 45));
+        mTemperatureLimitsMap.put(CoolingType.MED_ACTIVE_COOLING, new TemperatureLimit(0, 40));
     }
 
-    public enum AlertTarget {
-        TO_CONTROLLER,
-        TO_EMAIL
+    private void initAlertHandlerMap() {
+        if (null == mAlertHandlerMap) {
+            mAlertHandlerMap = new HashMap<>();
+        }
+        mAlertHandlerMap.put(AlertTarget.TO_CONTROLLER, new AlertToControllerHandler());
+        mAlertHandlerMap.put(AlertTarget.TO_EMAIL, new AlertToEmailHandler());
     }
 
-    public static class BatteryCharacter {
-        public CoolingType mCoolingType;
-        public String mBrand;
+    public BreachType inferBreach(final double value, final double lowerLimit,
+                                  final double upperLimit) {
+        BreachType breachType;
+        if (value < lowerLimit) {
+            breachType = BreachType.TOO_LOW;
+        } else if (upperLimit < value) {
+            breachType = BreachType.TOO_HIGH;
+        } else {
+            breachType = BreachType.NORMAL;
+        }
+        return breachType;
+    }
+
+    public BreachType classifyTemperatureBreach(final CoolingType coolingType,
+                                                final double temperatureInC) {
+        BreachType breachType = BreachType.NORMAL;
+        TemperatureLimit minMaxLimit = getMinMaxLimit(coolingType);
+        if (null != minMaxLimit) {
+            breachType = inferBreach(temperatureInC, minMaxLimit.getLowerLimit(),
+                    minMaxLimit.getUpperLimit());
+        }
+        return breachType;
+    }
+
+    private TemperatureLimit getMinMaxLimit(final CoolingType coolingType) {
+        TemperatureLimit minMaxLimit = null;
+        if ((null != coolingType) && (null != mTemperatureLimitsMap)
+                && (mTemperatureLimitsMap.containsKey(coolingType))) {
+            minMaxLimit = mTemperatureLimitsMap.get(coolingType);
+        }
+        return minMaxLimit;
+    }
+
+    public void checkAndAlert(final AlertTarget alertTarget,
+                              final BatteryCharacter batteryChar,
+                              final double temperatureInC) {
+        if (null != batteryChar) {
+            BreachType breachType = classifyTemperatureBreach(batteryChar.mCoolingType, temperatureInC);
+
+            if ((null != mAlertHandlerMap) && (mAlertHandlerMap.containsKey(alertTarget))) {
+                IAlertHandler handler = mAlertHandlerMap.get(alertTarget);
+                if (null != handler) {
+                    handler.onHandle(breachType);
+                }
+            }
+        }
     }
 
     private static class TemperatureLimit {
@@ -38,85 +100,6 @@ public class TypewiseAlert {
 
         double getUpperLimit() {
             return mUpperLimit;
-        }
-    }
-
-    public static BreachType inferBreach(final double value, final double lowerLimit,
-                                         final double upperLimit) {
-        BreachType breachType;
-        if (value < lowerLimit) {
-            breachType = BreachType.TOO_LOW;
-        } else if (upperLimit < value) {
-            breachType = BreachType.TOO_HIGH;
-        } else {
-            breachType = BreachType.NORMAL;
-        }
-        return breachType;
-    }
-
-    public static BreachType classifyTemperatureBreach(final CoolingType coolingType,
-                                                       final double temperatureInC) {
-        BreachType breachType = BreachType.NORMAL;
-        TemperatureLimit minMaxLimit = getMinMaxLimit(coolingType);
-        if (null != minMaxLimit) {
-            breachType = inferBreach(temperatureInC, minMaxLimit.getLowerLimit(),
-                    minMaxLimit.getUpperLimit());
-        }
-        return breachType;
-    }
-
-    private static TemperatureLimit getMinMaxLimit(final CoolingType coolingType) {
-        TemperatureLimit minMaxLimit = null;
-        switch (coolingType) {
-            case PASSIVE_COOLING:
-                minMaxLimit = new TemperatureLimit(0, 35);
-                break;
-            case HI_ACTIVE_COOLING:
-                minMaxLimit = new TemperatureLimit(0, 45);
-                break;
-            case MED_ACTIVE_COOLING:
-                minMaxLimit = new TemperatureLimit(0, 40);
-                break;
-        }
-        return minMaxLimit;
-    }
-
-    public static void checkAndAlert(final AlertTarget alertTarget,
-                                     final BatteryCharacter batteryChar,
-                                     final double temperatureInC) {
-        if (null != batteryChar) {
-            BreachType breachType = classifyTemperatureBreach(batteryChar.mCoolingType, temperatureInC);
-            switch (alertTarget) {
-                case TO_CONTROLLER:
-                    sendToController(breachType);
-                    break;
-                case TO_EMAIL:
-                    sendToEmail(breachType);
-                    break;
-            }
-        }
-    }
-
-    public static void sendToController(BreachType breachType) {
-        if (null != breachType) {
-            int header = 0xfeed;
-            System.out.printf("%d : %d\n", header, breachType.ordinal());
-        }
-    }
-
-    public static void sendToEmail(BreachType breachType) {
-        String recipient = "a.b@c.com";
-        switch (breachType) {
-            case TOO_LOW:
-                System.out.printf("To: %s\n", recipient);
-                System.out.println("Hi, the temperature is too low\n");
-                break;
-            case TOO_HIGH:
-                System.out.printf("To: %s\n", recipient);
-                System.out.println("Hi, the temperature is too high\n");
-                break;
-            case NORMAL:
-                break;
         }
     }
 
