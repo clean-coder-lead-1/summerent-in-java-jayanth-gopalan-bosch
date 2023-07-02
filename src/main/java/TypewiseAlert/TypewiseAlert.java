@@ -63,8 +63,7 @@ public class TypeWiseAlert {
 
     private TemperatureLimit getMinMaxLimit(final CoolingType coolingType) {
         TemperatureLimit minMaxLimit = null;
-        if ((null != coolingType) && (null != mTemperatureLimitsMap)
-                && (mTemperatureLimitsMap.containsKey(coolingType))) {
+        if ((null != coolingType) && (null != mTemperatureLimitsMap)) {
             minMaxLimit = mTemperatureLimitsMap.get(coolingType);
         }
         return minMaxLimit;
@@ -75,19 +74,34 @@ public class TypeWiseAlert {
                               final double temperatureInC) {
         if (null != batteryChar) {
             BreachType breachType = classifyTemperatureBreach(batteryChar.mCoolingType, temperatureInC);
-
-            if ((null != mAlertHandlerMap) && (mAlertHandlerMap.containsKey(alertTarget))) {
-                IAlertHandler handler = mAlertHandlerMap.get(alertTarget);
-                if (null != handler) {
-                    handler.onHandle(breachType);
-                }
-            }
+            IAlertHandler alertHandler = getAlertHandler(alertTarget);
+            runAlert(alertHandler, breachType);
+        } else {
+            System.err.println("No BatteryChar found. Aborting...");
         }
     }
 
+    private void runAlert(final IAlertHandler alertHandler, final BreachType breachType) {
+        if (null != alertHandler) {
+            alertHandler.onHandle(breachType);
+        } else {
+            System.err.println("Failed to run alert since AlertHandler is null");
+        }
+    }
+
+    private IAlertHandler getAlertHandler(final AlertTarget alertTarget) {
+        IAlertHandler alertHandler = null;
+        if ((null != alertTarget) && (null != mAlertHandlerMap)) {
+            alertHandler = mAlertHandlerMap.get(alertTarget);
+        } else {
+            System.err.println("Failed to get handler for running alertTarget");
+        }
+        return alertHandler;
+    }
+
     private static class TemperatureLimit {
-        private double mLowerLimit = 0;
-        private double mUpperLimit = 0;
+        private final double mLowerLimit;
+        private final double mUpperLimit;
 
         TemperatureLimit(final double lowerLimit, final double upperLimit) {
             mLowerLimit = lowerLimit;
