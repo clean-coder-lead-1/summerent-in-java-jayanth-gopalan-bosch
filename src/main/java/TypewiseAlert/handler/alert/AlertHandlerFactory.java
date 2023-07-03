@@ -5,7 +5,7 @@ import java.util.Map;
 
 import TypewiseAlert.types.AlertTarget;
 
-public final class AlertHandlerFactory {
+public class AlertHandlerFactory {
 
     private static final Map<AlertTarget, IAlertHandler> sAlertHandlerMap;
 
