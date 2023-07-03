@@ -52,6 +52,9 @@ public class TypewiseAlertTest {
         alertHandlerMap.put(AlertTarget.TO_CONTROLLER, mockAlertToControllerHandler);
         alertHandlerMap.put(AlertTarget.TO_EMAIL, mockAlertToEmailHandler);
 
+        // Reset the map
+        WhiteboxImpl.setInternalState(AlertHandlerFactory.class, "sAlertHandlerMap", (Map<AlertTarget, IAlertHandler>) null);
+        // Fill the map with mocks
         WhiteboxImpl.setInternalState(AlertHandlerFactory.class, "sAlertHandlerMap", alertHandlerMap);
 
         // Call target APIs
