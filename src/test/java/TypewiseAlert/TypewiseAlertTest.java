@@ -24,7 +24,7 @@ import TypewiseAlert.types.BreachType;
 import TypewiseAlert.types.CoolingType;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({AlertToControllerHandler.class, AlertToEmailHandler.class})
+@PrepareForTest({AlertHandlerFactory.class, AlertToControllerHandler.class, AlertToEmailHandler.class})
 public class TypewiseAlertTest {
 
     @Test
