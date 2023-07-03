@@ -3,6 +3,7 @@ package TypewiseAlert;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.mock;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,6 +52,9 @@ public class TypewiseAlertTest {
 
         alertHandlerMap.put(AlertTarget.TO_CONTROLLER, mockAlertToControllerHandler);
         alertHandlerMap.put(AlertTarget.TO_EMAIL, mockAlertToEmailHandler);
+
+        when(AlertHandlerFactory.createAlertHandler(AlertTarget.TO_CONTROLLER)).thenReturn(mockAlertToControllerHandler);
+        when(AlertHandlerFactory.createAlertHandler(AlertTarget.TO_EMAIL)).thenReturn(mockAlertToEmailHandler);
 
         // Reset the map
         WhiteboxImpl.setInternalState(AlertHandlerFactory.class, "sAlertHandlerMap", (Map<AlertTarget, IAlertHandler>) null);
