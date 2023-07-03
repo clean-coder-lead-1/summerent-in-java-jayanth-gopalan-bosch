@@ -30,6 +30,8 @@ public class TypewiseAlert {
 
     public BreachType inferBreach(final double value, final double lowerLimit,
                                   final double upperLimit) {
+        System.out.println("inferBreach().. value ::" + "\tlowerLimit ::" + lowerLimit
+                + "\tupperLimit ::" + upperLimit);
         BreachType breachType;
         if (value < lowerLimit) {
             breachType = BreachType.TOO_LOW;
