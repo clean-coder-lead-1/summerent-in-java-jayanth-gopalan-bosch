@@ -3,6 +3,7 @@ package TypewiseAlert;
 import java.util.HashMap;
 import java.util.Map;
 
+import TypewiseAlert.handler.alert.AlertHandlerFactory;
 import TypewiseAlert.handler.alert.AlertToControllerHandler;
 import TypewiseAlert.handler.alert.AlertToEmailHandler;
 import TypewiseAlert.handler.alert.IAlertHandler;
@@ -13,11 +14,9 @@ import TypewiseAlert.types.CoolingType;
 public class TypewiseAlert {
 
     private Map<CoolingType, TemperatureLimit> mTemperatureLimitsMap;
-    private Map<AlertTarget, IAlertHandler> mAlertHandlerMap;
 
     public TypewiseAlert() {
         initTemperatureLimitsMap();
-        initAlertHandlerMap();
     }
 
     private void initTemperatureLimitsMap() {
@@ -27,14 +26,6 @@ public class TypewiseAlert {
         mTemperatureLimitsMap.put(CoolingType.PASSIVE_COOLING, new TemperatureLimit(0, 35));
         mTemperatureLimitsMap.put(CoolingType.HI_ACTIVE_COOLING, new TemperatureLimit(0, 45));
         mTemperatureLimitsMap.put(CoolingType.MED_ACTIVE_COOLING, new TemperatureLimit(0, 40));
-    }
-
-    private void initAlertHandlerMap() {
-        if (null == mAlertHandlerMap) {
-            mAlertHandlerMap = new HashMap<>();
-        }
-        mAlertHandlerMap.put(AlertTarget.TO_CONTROLLER, new AlertToControllerHandler());
-        mAlertHandlerMap.put(AlertTarget.TO_EMAIL, new AlertToEmailHandler());
     }
 
     public BreachType inferBreach(final double value, final double lowerLimit,
@@ -74,7 +65,7 @@ public class TypewiseAlert {
                               final double temperatureInC) {
         if (null != batteryChar) {
             BreachType breachType = classifyTemperatureBreach(batteryChar.mCoolingType, temperatureInC);
-            IAlertHandler alertHandler = getAlertHandler(alertTarget);
+            IAlertHandler alertHandler = AlertHandlerFactory.createAlertHandler(alertTarget);
             runAlert(alertHandler, breachType);
         } else {
             System.err.println("No BatteryChar found. Aborting...");
@@ -89,21 +80,11 @@ public class TypewiseAlert {
         }
     }
 
-    private IAlertHandler getAlertHandler(final AlertTarget alertTarget) {
-        IAlertHandler alertHandler = null;
-        if ((null != alertTarget) && (null != mAlertHandlerMap)) {
-            alertHandler = mAlertHandlerMap.get(alertTarget);
-        } else {
-            System.err.println("Failed to get handler for running alertTarget");
-        }
-        return alertHandler;
-    }
-
-    private static class TemperatureLimit {
+    public static class TemperatureLimit {
         private final double mLowerLimit;
         private final double mUpperLimit;
 
-        TemperatureLimit(final double lowerLimit, final double upperLimit) {
+        public TemperatureLimit(final double lowerLimit, final double upperLimit) {
             mLowerLimit = lowerLimit;
             mUpperLimit = upperLimit;
         }
