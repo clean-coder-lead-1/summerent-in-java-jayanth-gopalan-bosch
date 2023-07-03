@@ -1,87 +1,103 @@
 package TypewiseAlert;
 
-public class TypewiseAlert 
-{
-    public enum BreachType {
-      NORMAL,
-      TOO_LOW,
-      TOO_HIGH
-    };
-    public static BreachType inferBreach(double value, double lowerLimit, double upperLimit) {
-      if(value < lowerLimit) {
-        return BreachType.TOO_LOW;
-      }
-      if(value > upperLimit) {
-        return BreachType.TOO_HIGH;
-      }
-      return BreachType.NORMAL;
-    }
-    public enum CoolingType {
-      PASSIVE_COOLING,
-      HI_ACTIVE_COOLING,
-      MED_ACTIVE_COOLING
-    };
-    public static BreachType classifyTemperatureBreach(
-        CoolingType coolingType, double temperatureInC) {
-      int lowerLimit = 0;
-      int upperLimit = 0;
-      switch(coolingType) {
-        case PASSIVE_COOLING:
-          lowerLimit = 0;
-          upperLimit = 35;
-          break;
-        case HI_ACTIVE_COOLING:
-          lowerLimit = 0;
-          upperLimit = 45;
-          break;
-        case MED_ACTIVE_COOLING:
-          lowerLimit = 0;
-          upperLimit = 40;
-          break;
-      }
-      return inferBreach(temperatureInC, lowerLimit, upperLimit);
-    }
-    public enum AlertTarget{
-      TO_CONTROLLER,
-      TO_EMAIL
-    };
-    public class BatteryCharacter {
-      public CoolingType coolingType;
-      public String brand;
-    }
-    public static void checkAndAlert(
-        AlertTarget alertTarget, BatteryCharacter batteryChar, double temperatureInC) {
+import java.util.HashMap;
+import java.util.Map;
 
-      BreachType breachType = classifyTemperatureBreach(
-        batteryChar.coolingType, temperatureInC
-      );
+import TypewiseAlert.handler.alert.AlertHandlerFactory;
+import TypewiseAlert.handler.alert.AlertToControllerHandler;
+import TypewiseAlert.handler.alert.AlertToEmailHandler;
+import TypewiseAlert.handler.alert.IAlertHandler;
+import TypewiseAlert.types.AlertTarget;
+import TypewiseAlert.types.BreachType;
+import TypewiseAlert.types.CoolingType;
 
-      switch(alertTarget) {
-        case TO_CONTROLLER:
-          sendToController(breachType);
-          break;
-        case TO_EMAIL:
-          sendToEmail(breachType);
-          break;
-      }
+public class TypewiseAlert {
+
+    private Map<CoolingType, TemperatureLimit> mTemperatureLimitsMap;
+
+    public TypewiseAlert() {
+        initTemperatureLimitsMap();
     }
-    public static void sendToController(BreachType breachType) {
-      int header = 0xfeed;
-      System.out.printf("%i : %i\n", header, breachType);
+
+    private void initTemperatureLimitsMap() {
+        if (null == mTemperatureLimitsMap) {
+            mTemperatureLimitsMap = new HashMap<>();
+        }
+        mTemperatureLimitsMap.put(CoolingType.PASSIVE_COOLING, new TemperatureLimit(0, 35));
+        mTemperatureLimitsMap.put(CoolingType.HI_ACTIVE_COOLING, new TemperatureLimit(0, 45));
+        mTemperatureLimitsMap.put(CoolingType.MED_ACTIVE_COOLING, new TemperatureLimit(0, 40));
     }
-    public static void sendToEmail(BreachType breachType) {
-      String recepient = "a.b@c.com";
-      switch(breachType) {
-        case TOO_LOW:
-          System.out.printf("To: %s\n", recepient);
-          System.out.println("Hi, the temperature is too low\n");
-          break;
-        case TOO_HIGH:
-          System.out.printf("To: %s\n", recepient);
-          System.out.println("Hi, the temperature is too high\n");
-          break;
-        case NORMAL:
-          break;
-      }
+
+    public BreachType inferBreach(final double value, final double lowerLimit,
+                                  final double upperLimit) {
+        System.out.println("inferBreach().. value ::" + value + "\tlowerLimit ::" + lowerLimit
+                + "\tupperLimit ::" + upperLimit);
+        BreachType breachType;
+        if (value < lowerLimit) {
+            breachType = BreachType.TOO_LOW;
+        } else if (upperLimit < value) {
+            breachType = BreachType.TOO_HIGH;
+        } else {
+            breachType = BreachType.NORMAL;
+        }
+        return breachType;
     }
+
+    public BreachType classifyTemperatureBreach(final CoolingType coolingType,
+                                                final double temperatureInC) {
+        BreachType breachType = BreachType.NORMAL;
+        TemperatureLimit minMaxLimit = getMinMaxLimit(coolingType);
+        if (null != minMaxLimit) {
+            breachType = inferBreach(temperatureInC, minMaxLimit.getLowerLimit(),
+                    minMaxLimit.getUpperLimit());
+        }
+        return breachType;
+    }
+
+    private TemperatureLimit getMinMaxLimit(final CoolingType coolingType) {
+        TemperatureLimit minMaxLimit = null;
+        if ((null != coolingType) && (null != mTemperatureLimitsMap)) {
+            minMaxLimit = mTemperatureLimitsMap.get(coolingType);
+        }
+        return minMaxLimit;
+    }
+
+    public void checkAndAlert(final AlertTarget alertTarget,
+                              final BatteryCharacter batteryChar,
+                              final double temperatureInC) {
+        if (null != batteryChar) {
+            BreachType breachType = classifyTemperatureBreach(batteryChar.mCoolingType, temperatureInC);
+            IAlertHandler alertHandler = AlertHandlerFactory.createAlertHandler(alertTarget);
+            runAlert(alertHandler, breachType);
+        } else {
+            System.err.println("No BatteryChar found. Aborting...");
+        }
+    }
+
+    private void runAlert(final IAlertHandler alertHandler, final BreachType breachType) {
+        if (null != alertHandler) {
+            alertHandler.onHandle(breachType);
+        } else {
+            System.err.println("Failed to run alert since AlertHandler is null");
+        }
+    }
+
+    public static class TemperatureLimit {
+        private final double mLowerLimit;
+        private final double mUpperLimit;
+
+        public TemperatureLimit(final double lowerLimit, final double upperLimit) {
+            mLowerLimit = lowerLimit;
+            mUpperLimit = upperLimit;
+        }
+
+        double getLowerLimit() {
+            return mLowerLimit;
+        }
+
+        double getUpperLimit() {
+            return mUpperLimit;
+        }
+    }
+
 }
