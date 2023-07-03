@@ -12,8 +12,8 @@ public class TypewiseAlertTest {
     @Test
     public void infersBreachAsPerLimits() {
         assertSame(new TypewiseAlert().inferBreach(12, 20, 30), BreachType.TOO_LOW);
-        assertSame(new TypewiseAlert().inferBreach(15, 20, 30), BreachType.NORMAL);
-        assertSame(new TypewiseAlert().inferBreach(22, 20, 30), BreachType.TOO_HIGH);
+        assertSame(new TypewiseAlert().inferBreach(25, 20, 30), BreachType.NORMAL);
+        assertSame(new TypewiseAlert().inferBreach(32, 20, 30), BreachType.TOO_HIGH);
     }
 
     @Test
