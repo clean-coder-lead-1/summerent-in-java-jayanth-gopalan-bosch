@@ -46,20 +46,11 @@ public class TypewiseAlertTest {
     public void testCheckAndAlert() {
         // Setup
         PowerMockito.mockStatic(AlertHandlerFactory.class);
-        Map<AlertTarget, IAlertHandler> alertHandlerMap = new HashMap<>();
         AlertToControllerHandler mockAlertToControllerHandler = mock(AlertToControllerHandler.class);
         AlertToEmailHandler mockAlertToEmailHandler = mock(AlertToEmailHandler.class);
 
-        alertHandlerMap.put(AlertTarget.TO_CONTROLLER, mockAlertToControllerHandler);
-        alertHandlerMap.put(AlertTarget.TO_EMAIL, mockAlertToEmailHandler);
-
         when(AlertHandlerFactory.createAlertHandler(AlertTarget.TO_CONTROLLER)).thenReturn(mockAlertToControllerHandler);
         when(AlertHandlerFactory.createAlertHandler(AlertTarget.TO_EMAIL)).thenReturn(mockAlertToEmailHandler);
-
-        // Reset the map
-        WhiteboxImpl.setInternalState(AlertHandlerFactory.class, "sAlertHandlerMap", (Map<AlertTarget, IAlertHandler>) null);
-        // Fill the map with mocks
-        WhiteboxImpl.setInternalState(AlertHandlerFactory.class, "sAlertHandlerMap", alertHandlerMap);
 
         // Call target APIs
         new TypewiseAlert().checkAndAlert(AlertTarget.TO_CONTROLLER,
