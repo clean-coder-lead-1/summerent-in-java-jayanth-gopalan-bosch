@@ -5,6 +5,8 @@ import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -28,18 +30,33 @@ import TypewiseAlert.types.CoolingType;
 @PrepareForTest({AlertHandlerFactory.class, AlertToControllerHandler.class, AlertToEmailHandler.class})
 public class TypewiseAlertTest {
 
+    private TypewiseAlert mTypewiseAlert;
+
+    @Before
+    public void setup() {
+        mTypewiseAlert = new TypewiseAlert();
+    }
+
+    @After
+    public void tearDown() {
+        mTypewiseAlert = null;
+    }
+
     @Test
     public void infersBreachAsPerLimits() {
-        assertSame(new TypewiseAlert().inferBreach(12, 20, 30), BreachType.TOO_LOW);
-        assertSame(new TypewiseAlert().inferBreach(25, 20, 30), BreachType.NORMAL);
-        assertSame(new TypewiseAlert().inferBreach(32, 20, 30), BreachType.TOO_HIGH);
+        assertSame(mTypewiseAlert.inferBreach(12, 20, 30), BreachType.TOO_LOW);
+        assertSame(mTypewiseAlert.inferBreach(25, 20, 30), BreachType.NORMAL);
+        assertSame(mTypewiseAlert.inferBreach(32, 20, 30), BreachType.TOO_HIGH);
     }
 
     @Test
     public void testClassifyTemperatureBreach() {
-        assertSame(new TypewiseAlert().classifyTemperatureBreach(CoolingType.PASSIVE_COOLING, -12.0f), BreachType.TOO_LOW);
-        assertSame(new TypewiseAlert().classifyTemperatureBreach(CoolingType.MED_ACTIVE_COOLING, 30.0f), BreachType.NORMAL);
-        assertSame(new TypewiseAlert().classifyTemperatureBreach(CoolingType.HI_ACTIVE_COOLING, 50.0f), BreachType.TOO_HIGH);
+        assertSame(mTypewiseAlert.classifyTemperatureBreach(CoolingType.PASSIVE_COOLING, -12.0f),
+                BreachType.TOO_LOW);
+        assertSame(mTypewiseAlert.classifyTemperatureBreach(CoolingType.MED_ACTIVE_COOLING, 30.0f),
+                BreachType.NORMAL);
+        assertSame(mTypewiseAlert.classifyTemperatureBreach(CoolingType.HI_ACTIVE_COOLING, 50.0f),
+                BreachType.TOO_HIGH);
     }
 
     @Test
@@ -50,7 +67,7 @@ public class TypewiseAlertTest {
         when(AlertHandlerFactory.createAlertHandler(AlertTarget.TO_CONTROLLER)).thenReturn(mockAlertToControllerHandler);
 
         // Call target APIs
-        new TypewiseAlert().checkAndAlert(AlertTarget.TO_CONTROLLER,
+        mTypewiseAlert.checkAndAlert(AlertTarget.TO_CONTROLLER,
                 new BatteryCharacter(CoolingType.MED_ACTIVE_COOLING, ""), 35);
 
         // Verify
@@ -65,7 +82,7 @@ public class TypewiseAlertTest {
         when(AlertHandlerFactory.createAlertHandler(AlertTarget.TO_EMAIL)).thenReturn(mockAlertToEmailHandler);
 
         // Call target APIs
-        new TypewiseAlert().checkAndAlert(AlertTarget.TO_EMAIL,
+        mTypewiseAlert.checkAndAlert(AlertTarget.TO_EMAIL,
                 new BatteryCharacter(CoolingType.MED_ACTIVE_COOLING, ""), 35);
 
         // Verify
