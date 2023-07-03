@@ -17,6 +17,7 @@ public class AlertHandlerFactory {
 
     public static IAlertHandler createAlertHandler(final AlertTarget alertTarget) {
         IAlertHandler alertHandler = null;
+        System.out.println("sAlertHandlerMap ::" + sAlertHandlerMap);
         if ((null != alertTarget) && (null != sAlertHandlerMap)) {
             alertHandler = sAlertHandlerMap.get(alertTarget);
         } else {
