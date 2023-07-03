@@ -43,23 +43,32 @@ public class TypewiseAlertTest {
     }
 
     @Test
-    public void testCheckAndAlert() {
+    public void testCheckAndAlert1() {
         // Setup
         PowerMockito.mockStatic(AlertHandlerFactory.class);
         AlertToControllerHandler mockAlertToControllerHandler = mock(AlertToControllerHandler.class);
-        AlertToEmailHandler mockAlertToEmailHandler = mock(AlertToEmailHandler.class);
-
         when(AlertHandlerFactory.createAlertHandler(AlertTarget.TO_CONTROLLER)).thenReturn(mockAlertToControllerHandler);
-        when(AlertHandlerFactory.createAlertHandler(AlertTarget.TO_EMAIL)).thenReturn(mockAlertToEmailHandler);
 
         // Call target APIs
         new TypewiseAlert().checkAndAlert(AlertTarget.TO_CONTROLLER,
                 new BatteryCharacter(CoolingType.MED_ACTIVE_COOLING, ""), 35);
+
+        // Verify
+        verify(mockAlertToControllerHandler, Mockito.atLeastOnce()).onHandle(BreachType.NORMAL);
+    }
+
+    @Test
+    public void testCheckAndAlert2() {
+        // Setup
+        PowerMockito.mockStatic(AlertHandlerFactory.class);
+        AlertToEmailHandler mockAlertToEmailHandler = mock(AlertToEmailHandler.class);
+        when(AlertHandlerFactory.createAlertHandler(AlertTarget.TO_EMAIL)).thenReturn(mockAlertToEmailHandler);
+
+        // Call target APIs
         new TypewiseAlert().checkAndAlert(AlertTarget.TO_EMAIL,
                 new BatteryCharacter(CoolingType.MED_ACTIVE_COOLING, ""), 35);
 
         // Verify
-        verify(mockAlertToControllerHandler, Mockito.atLeastOnce()).onHandle(BreachType.NORMAL);
         verify(mockAlertToEmailHandler, Mockito.atLeastOnce()).onHandle(BreachType.NORMAL);
     }
 
